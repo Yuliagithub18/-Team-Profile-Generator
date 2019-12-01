@@ -1,12 +1,12 @@
 const fs = require("fs")
 const inquirer = require("inquirer")
-const employeeGen = require("./lib/employee")
-const Engineer = require("./lib/engineer")
-const Intern = require("./lib/intern")
-const Manager = require("./lib/manager")
-const teamMembers = [];
+let renderFile = require("./render")
+const generateManager = renderFile.createManager
+const generateEngineer = renderFile.createEngineer
+const generateIntern = renderFile.createIntern
+const renderHTML = renderFile.renderMain
 
-function init() {
+function askQuestions() {
 
     inquirer
         .prompt([{
@@ -34,40 +34,69 @@ function init() {
             function ({ name, id, email, role }) {
                 switch (role) {
                     case "Engineer":
-                        {
-                            inquirer
-                                .prompt({
-                                    type: "input",
-                                    message: "What is your GitHub username?",
-                                    name: "github"
-                                }).then(
-                                    // new class within array
-                                )
-                        }
+                        inquirer
+                            .prompt({
+                                type: "input",
+                                message: "What is your GitHub username?",
+                                name: "github"
+                            }).then(
+                                function ({ github }) {
+                                    generateEngineer(name, id, email, github)
+                                    addOtherMembers()
+                                }
+                            )
                         break
                     case "Intern":
-                        {
-                            inquirer
-                                .prompt({
-                                    type: "input",
-                                    message: "What school do you attend?",
-                                    name: "school"
-                                }).then()
-                        }
+                        inquirer
+                            .prompt({
+                                type: "input",
+                                message: "What school do you attend?",
+                                name: "school"
+                            }).then(
+                                function ({ school }) {
+                                    generateIntern(name, id, email, school)
+                                    addOtherMembers()
+                                }
+                            )
                         break
                     case "Manager":
-                        {
-                            inquirer
-                                .prompt({
-                                    type: "input",
-                                    message: "What is your Office Number?",
-                                    name: "officeNumber"
-                                }).then()
-                        }
+                        inquirer
+                            .prompt({
+                                type: "input",
+                                message: "What is your Office Number?",
+                                name: "officeNumber"
+                            }).then(
+                                function ({ officeNumber }) {
+                                    generateManager(name, id, email, officeNumber)
+                                    addOtherMembers()
+                                }
+                            )
                         break
                 }
-
             })
+
 }
 
-init();
+function addOtherMembers() {
+    inquirer.prompt({
+        type: "confirm",
+        message: "Add other Team Members?",
+        name: "addOtherMembers"
+    }).then(
+        function ({ addOtherMembers }) {
+            console.log("add other members", addOtherMembers)
+            if (addOtherMembers) {
+                askQuestions()
+            } else {
+                renderHTML()
+            }
+        }
+    )
+        .catch(err => {
+            console.log("Error adding other members", err)
+            throw err
+        })
+}
+
+
+askQuestions()
